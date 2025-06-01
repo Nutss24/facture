@@ -8,10 +8,10 @@ import requests as req_ping
 
 # ==== CONFIGURATION ====
 
-WEBHOOK_URL = "https://discord.com/api/webhooks/TON_ID/TON_TOKEN"
+WEBHOOK_URL = "https://discord.com/api/webhooks/1378351740075642920/0KiVgc5upTWzNOVX1NoEcfrQ-PiV0q_mjscPLOaFyZ1JhvysqC0SizYdK1hlwLKPSXAK"
 API_URL = "https://apirp.glife.fr/roleplay/org/invoices?id=1397&characterId=239519"
 REFRESH_INTERVAL = 300  # Vérification toutes les 5 minutes
-AUTO_PING_URL = "https://ton-projet.onrender.com/"  # Mets ici l'URL de ton Render
+AUTO_PING_URL = "https://facture-urjb.onrender.com"  # Mets ici l'URL de ton Render
 
 # ========================
 
