@@ -11,7 +11,7 @@ import traceback
 
 WEBHOOK_URL = "https://discord.com/api/webhooks/1378351740075642920/0KiVgc5upTWzNOVX1NoEcfrQ-PiV0q_mjscPLOaFyZ1JhvysqC0SizYdK1hlwLKPSXAK"
 API_URL = "https://api.glife.fr/roleplay/org/invoices?id=1397"
-REFRESH_INTERVAL = 300  # Vérification des factures toutes les 5 minutes
+REFRESH_INTERVAL = 10  # Vérification des factures toutes les 5 minutes
 PING_INTERVAL = 3600    # Ping de vie toutes les heures
 AUTO_PING_URL = "https://facture-urjb.onrender.com"
 
