@@ -5,13 +5,15 @@ from zoneinfo import ZoneInfo
 from flask import Flask
 import threading
 import requests as req_ping
+import traceback
 
 # ==== CONFIGURATION ====
 
 WEBHOOK_URL = "https://discord.com/api/webhooks/1378351740075642920/0KiVgc5upTWzNOVX1NoEcfrQ-PiV0q_mjscPLOaFyZ1JhvysqC0SizYdK1hlwLKPSXAK"
-API_URL = "https://apirp.glife.fr/roleplay/org/invoices?id=1397&characterId=239519"
-REFRESH_INTERVAL = 300  # Vérification toutes les 5 minutes
-AUTO_PING_URL = "https://facture-urjb.onrender.com"  # Mets ici l'URL de ton Render
+API_URL = "https://api.glife.fr/roleplay/org/invoices?id=1397"
+REFRESH_INTERVAL = 300  # Vérification des factures toutes les 5 minutes
+PING_INTERVAL = 3600    # Ping de vie toutes les heures
+AUTO_PING_URL = "https://facture-urjb.onrender.com"
 
 # ========================
 
@@ -40,16 +42,17 @@ def reset_totaux():
     total_general = 0
     return "Totaux remis à zéro ✅", 200
 
-# Dictionnaire pour stocker les totaux par client
 totaux_clients = {}
-# Variable pour le total général
 total_general = 0
 
 def envoyer_discord(message):
     payload = {"content": message}
-    response = requests.post(WEBHOOK_URL, json=payload)
-    if response.status_code != 204:
-        print(f"Erreur Discord : {response.status_code} - {response.text}")
+    try:
+        response = requests.post(WEBHOOK_URL, json=payload)
+        if response.status_code != 204:
+            print(f"Erreur Discord : {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Erreur d'envoi Discord : {e}")
 
 def get_timestamp_now():
     return int(time.time())
@@ -64,7 +67,7 @@ def check_factures(start, end):
             print("Réponse API brute : ", data)
             for facture in data:
                 facture_id = facture.get("id", "Inconnu")
-                montant = facture.get("revenue", 0)  # Adapter le champ ici (ex : "revenue")
+                montant = facture.get("revenue", 0)
                 try:
                     montant = int(montant)
                 except:
@@ -90,14 +93,18 @@ def check_factures(start, end):
         print(f"Erreur API : {response.status_code} - {response.text}")
 
 def boucle():
-    print("🚀 Surveillance des factures en cours...")
-    last_timestamp = get_timestamp_now()
-    while True:
-        time.sleep(REFRESH_INTERVAL)
-        current_timestamp = get_timestamp_now()
-        print(f"🔎 Vérification entre {last_timestamp} et {current_timestamp}...")
-        check_factures(last_timestamp, current_timestamp)
-        last_timestamp = current_timestamp
+    try:
+        envoyer_discord("✅ Le script est actif et surveille les factures !")
+        last_timestamp = get_timestamp_now()
+        while True:
+            time.sleep(REFRESH_INTERVAL)
+            current_timestamp = get_timestamp_now()
+            print(f"🔎 Vérification entre {last_timestamp} et {current_timestamp}...")
+            check_factures(last_timestamp, current_timestamp)
+            last_timestamp = current_timestamp
+    except Exception as e:
+        erreur = traceback.format_exc()
+        envoyer_discord(f"❌ Attention ! Le script a rencontré une erreur :\n```{erreur}```")
 
 def auto_ping():
     while True:
@@ -108,9 +115,19 @@ def auto_ping():
             print("Erreur lors de l'auto-ping :", e)
         time.sleep(300)  # Ping toutes les 5 minutes
 
+def ping_discord():
+    while True:
+        try:
+            maintenant = datetime.datetime.now(tz=ZoneInfo("Europe/Paris")).strftime("%Y-%m-%d %H:%M:%S")
+            envoyer_discord(f"✅ Le script est toujours actif à {maintenant}.")
+        except Exception as e:
+            print("Erreur lors du ping Discord :", e)
+        time.sleep(PING_INTERVAL)  # Ping toutes les heures
+
 # Lancer les threads
 threading.Thread(target=boucle).start()
 threading.Thread(target=auto_ping).start()
+threading.Thread(target=ping_discord).start()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
