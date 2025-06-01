@@ -3,16 +3,19 @@ import requests
 import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask
+import threading
+import requests as req_ping
 
 # ==== CONFIGURATION ====
 
 WEBHOOK_URL = "https://discord.com/api/webhooks/TON_ID/TON_TOKEN"
 API_URL = "https://apirp.glife.fr/roleplay/org/invoices?id=1397&characterId=239519"
-REFRESH_INTERVAL = 300  # Intervalle de 5 minutes
+REFRESH_INTERVAL = 300  # Vérification toutes les 5 minutes
+AUTO_PING_URL = "https://ton-projet.onrender.com/"  # Mets ici l'URL de ton Render
 
 # ========================
 
-# Flask app pour Render (et UptimeRobot si besoin)
+# Flask app pour Render
 app = Flask(__name__)
 
 @app.route("/")
@@ -96,8 +99,18 @@ def boucle():
         check_factures(last_timestamp, current_timestamp)
         last_timestamp = current_timestamp
 
-import threading
+def auto_ping():
+    while True:
+        try:
+            print("🔄 Auto-ping envoyé...")
+            req_ping.get(AUTO_PING_URL)
+        except Exception as e:
+            print("Erreur lors de l'auto-ping :", e)
+        time.sleep(300)  # Ping toutes les 5 minutes
+
+# Lancer les threads
 threading.Thread(target=boucle).start()
+threading.Thread(target=auto_ping).start()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
